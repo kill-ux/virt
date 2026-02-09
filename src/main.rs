@@ -43,7 +43,7 @@ struct VM {
 impl VM {
     fn read_reg(&self, r: u16) -> u16 {
         if r < 32768 {
-            self.memory[r as usize]
+            self.program[r as usize]
         } else {
             r
         }
@@ -51,7 +51,7 @@ impl VM {
 
     fn write_reg(&mut self, r: u16, value: u16) {
         if r < 32768 {
-            self.memory[r as usize] = value;
+            self.program[r as usize] = value;
         }
     }
 
@@ -149,13 +149,13 @@ impl VM {
             INST::RMEM => {
                 let a = self.next_u16();
                 let b = self.next_u16();
-                self.write_reg(a, self.memory[self.read_reg(b) as usize]);
+                self.write_reg(a, self.program[self.read_reg(b) as usize]);
             }
             INST::WMEM => {
                 let a = self.next_u16();
                 let b = self.next_u16();
                 let addr = self.read_reg(a) as usize;
-                self.memory[addr] = self.read_reg(b);
+                self.program[addr] = self.read_reg(b);
             }
 
             // 1-operand: address
@@ -209,7 +209,7 @@ impl VM {
             INST::OUT => {
                 let a_raw = self.next_u16();
                 let a = self.read_reg(a_raw);
-                println!("{}", a as u8 as char)
+                print!("{}", a as u8 as char)
             }
             INST::IN => {
                 let mut buf = String::new();
@@ -220,7 +220,7 @@ impl VM {
                 let val = buf.trim().parse().unwrap();
                 self.write_reg(r, val);
 
-                dbg!(&self.memory[..10]);
+                // dbg!(&self.program[..10]);
             }
         }
     }
@@ -241,7 +241,7 @@ fn main() -> Result<()> {
         ip: 0,
         program,
     };
-
+    let counter = 0;
     while vm.ip < vm.program.len() {
         let opcode = vm.program[vm.ip];
         vm.ip += 1;
@@ -249,6 +249,9 @@ fn main() -> Result<()> {
             vm.run_instruction(inst);
         } else {
             eprintln!("Invalid opcode: {}", opcode);
+            break;
+        }
+        if counter == 20 {
             break;
         }
     }
